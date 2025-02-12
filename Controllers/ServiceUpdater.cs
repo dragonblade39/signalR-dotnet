@@ -22,7 +22,7 @@ namespace WebApplication1.Controllers
                 _logger.LogInformation("Method Called");
                 var response = await _httpClient.GetAsync("https://localhost:7068/api/TreeNodes");
                 await _hubContext.Clients.All.SendAsync("ReceiveTreeNode", response);
-                await Task.Delay(TimeSpan.FromSeconds(5), cancellation);
+                await Task.Delay(TimeSpan.FromSeconds(2), cancellation);
             }
         }
         

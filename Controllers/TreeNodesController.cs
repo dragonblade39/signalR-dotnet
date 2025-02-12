@@ -118,57 +118,22 @@ public class TreeNodesController : ControllerBase
         return NotFound(new { message = "No children found for the specified node." });
     }
 
-
-
-
-    private async Task FetchChildrenRecursive(int parentId, List<TreeNode> allChildren)
+    // GET: api/TreeNodes/{id}
+    [HttpGet("{id}")]
+    public async Task<ActionResult<TreeNode>> GetTreeNodeById(int id)
     {
-        var children = await _context.TreeNodes
-            .Where(node => node.ParentId == parentId)
-            .ToListAsync();
+        var node = await _context.TreeNodes
+            .Include(n => n.Children) // Ensure children are loaded
+            .FirstOrDefaultAsync(n => n.Id == id);
 
-        foreach (var child in children)
-        {
-            allChildren.Add(child);
-            await FetchChildrenRecursive(child.Id, allChildren);
-        }
-    }
-
-    [HttpGet("treeByName/{name}")]
-    public async Task<IActionResult> GetTreeByName(string name)
-    {
-        // Find the node by name
-        var rootNode = await _context.TreeNodes
-            .FirstOrDefaultAsync(node => node.Label == name);
-
-        if (rootNode == null)
+        if (node == null)
         {
             return NotFound(new { message = "Node not found." });
         }
 
-        Console.WriteLine($"Found Node: {rootNode.Id} - {rootNode.Label}");
-
-        // Fetch the full tree starting from this node
-        var fullTree = await BuildTree(rootNode);
-
-        return Ok(fullTree);
+        return Ok(node);
     }
 
-    // 🔥 Recursive function to build tree structure
-    private async Task<TreeNode> BuildTree(TreeNode node)
-    {
-        var children = await _context.TreeNodes
-            .Where(n => n.ParentId == node.Id)
-            .ToListAsync();
-
-        foreach (var child in children)
-        {
-            child.Children = new List<TreeNode> { await BuildTree(child) };
-        }
-
-        node.Children = children;
-        return node;
-    }
 
 
 }

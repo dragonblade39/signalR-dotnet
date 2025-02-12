@@ -11,8 +11,8 @@ using WebApplication1.Data;
 namespace WebApplication1.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250212065641_UpdatedSignaLR")]
-    partial class UpdatedSignaLR
+    [Migration("20250212125934_UpdatedAPI")]
+    partial class UpdatedAPI
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
