@@ -4,16 +4,20 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
 using WebApplication1.Model;
+using WebApplication1.Hubs;
+using Microsoft.AspNetCore.SignalR;
 
 [Route("api/[controller]")]
 [ApiController]
 public class TreeNodesController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly IHubContext<TreeNodeHub> _hubContext;
 
-    public TreeNodesController(AppDbContext context)
+    public TreeNodesController(AppDbContext context, IHubContext<TreeNodeHub> hubContext)
     {
         _context = context;
+        _hubContext = hubContext;
     }
 
     // POST: api/TreeNodes
@@ -29,6 +33,7 @@ public class TreeNodesController : ControllerBase
         {
             // Insert each node and its children
             await InsertNode(node, null);
+            await _hubContext.Clients.All.SendAsync("ReceiveTreeNode", node);
         }
 
         await _context.SaveChangesAsync(); // Save once after all nodes are queued
@@ -85,23 +90,85 @@ public class TreeNodesController : ControllerBase
 
         return Ok(children);
     }
-
-    // GET: api/TreeNodes/childrenByName/{name}
     [HttpGet("childrenByName/{name}")]
-    public async Task<ActionResult<IEnumerable<TreeNode>>> GetChildrenByName(string name)
+    public async Task<IActionResult> GetChildrenByName(string name)
     {
+        // Find the parent node based on the name
         var parentNode = await _context.TreeNodes
             .FirstOrDefaultAsync(node => node.Label == name);
 
         if (parentNode == null)
         {
-            return NotFound("Parent node not found.");
+            return NotFound(new { message = "Parent node not found." });
         }
 
-        var children = await _context.TreeNodes
+        Console.WriteLine($"Found Parent Node: {parentNode.Id} - {parentNode.Label}");
+
+        // Get children for the parent node
+        var directChildren = await _context.TreeNodes
             .Where(node => node.ParentId == parentNode.Id)
             .ToListAsync();
 
-        return Ok(children);
+        if (directChildren.Count > 0)
+        {
+            return Ok(directChildren); // Return only direct children
+        }
+
+        // If direct children are missing, return an appropriate message
+        return NotFound(new { message = "No children found for the specified node." });
     }
+
+
+
+
+    private async Task FetchChildrenRecursive(int parentId, List<TreeNode> allChildren)
+    {
+        var children = await _context.TreeNodes
+            .Where(node => node.ParentId == parentId)
+            .ToListAsync();
+
+        foreach (var child in children)
+        {
+            allChildren.Add(child);
+            await FetchChildrenRecursive(child.Id, allChildren);
+        }
+    }
+
+    [HttpGet("treeByName/{name}")]
+    public async Task<IActionResult> GetTreeByName(string name)
+    {
+        // Find the node by name
+        var rootNode = await _context.TreeNodes
+            .FirstOrDefaultAsync(node => node.Label == name);
+
+        if (rootNode == null)
+        {
+            return NotFound(new { message = "Node not found." });
+        }
+
+        Console.WriteLine($"Found Node: {rootNode.Id} - {rootNode.Label}");
+
+        // Fetch the full tree starting from this node
+        var fullTree = await BuildTree(rootNode);
+
+        return Ok(fullTree);
+    }
+
+    // 🔥 Recursive function to build tree structure
+    private async Task<TreeNode> BuildTree(TreeNode node)
+    {
+        var children = await _context.TreeNodes
+            .Where(n => n.ParentId == node.Id)
+            .ToListAsync();
+
+        foreach (var child in children)
+        {
+            child.Children = new List<TreeNode> { await BuildTree(child) };
+        }
+
+        node.Children = children;
+        return node;
+    }
+
+
 }
