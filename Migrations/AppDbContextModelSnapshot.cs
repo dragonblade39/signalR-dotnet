@@ -26,8 +26,8 @@ namespace WebApplication1.Migrations
                     b.Property<int>("Id")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                    b.Property<int>("IsActive")
+                        .HasColumnType("int");
 
                     b.Property<string>("Label")
                         .IsRequired()

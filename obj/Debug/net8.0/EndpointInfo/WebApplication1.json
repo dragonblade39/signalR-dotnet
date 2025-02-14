@@ -245,7 +245,8 @@
             "nullable": true
           },
           "isActive": {
-            "type": "boolean"
+            "type": "integer",
+            "format": "int32"
           },
           "parentId": {
             "type": "integer",

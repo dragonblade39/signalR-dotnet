@@ -5,7 +5,7 @@
 namespace WebApplication1.Migrations
 {
     /// <inheritdoc />
-    public partial class Updated : Migration
+    public partial class updatedDataType : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -16,6 +16,7 @@ namespace WebApplication1.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false),
                     Label = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsActive = table.Column<int>(type: "int", nullable: false),
                     ParentId = table.Column<int>(type: "int", nullable: true),
                     TreeNodeId = table.Column<int>(type: "int", nullable: true)
                 },

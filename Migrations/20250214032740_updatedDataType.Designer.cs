@@ -11,8 +11,8 @@ using WebApplication1.Data;
 namespace WebApplication1.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250212024454_Updated")]
-    partial class Updated
+    [Migration("20250214032740_updatedDataType")]
+    partial class updatedDataType
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,6 +27,9 @@ namespace WebApplication1.Migrations
             modelBuilder.Entity("WebApplication1.Model.TreeNode", b =>
                 {
                     b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IsActive")
                         .HasColumnType("int");
 
                     b.Property<string>("Label")
